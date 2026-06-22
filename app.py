@@ -10,6 +10,7 @@ yuleme_tarixcesi = []
 ADMIN_HTML = """
 <!DOCTYPE html>
 <html>
+<head><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
 <body style="background-color: #000; color: #0f0; font-family: monospace; padding: 20px;">
     <h1>Admin Paneli - Yükləmələr</h1>
     <hr>
@@ -29,9 +30,10 @@ HOME_HTML = """
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body { background-color: #121212; color: white; text-align: center; padding-top: 50px; font-family: Arial; }
-        .box { background-color: #1e1e1e; padding: 30px; border-radius: 15px; display: inline-block; width: 300px; }
+        .box { background-color: #1e1e1e; padding: 30px; border-radius: 15px; display: inline-block; width: 90%; max-width: 300px; }
         input { width: 90%; padding: 10px; margin-bottom: 10px; }
         button { background-color: #ff0050; border: none; color: white; padding: 10px 20px; cursor: pointer; }
     </style>
