@@ -1,8 +1,15 @@
-from flask import Flask, render_template_string, request
+from flask import Flask, render_template_string, request, Response
 import requests
 import os
 
 app = Flask(__name__)
+
+# Videonu server vasitəsilə endirən yeni funksiya (sətir sayını qorumaq üçün buradadır)
+@app.route('/download')
+def download():
+    url = request.args.get('url')
+    r = requests.get(url, stream=True)
+    return Response(r.iter_content(chunk_size=1024*1024), content_type='video/mp4', headers={'Content-Disposition': 'attachment; filename=video.mp4'})
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -15,7 +22,6 @@ HTML_TEMPLATE = """
         .signature { color: #888; font-size: 14px; margin-bottom: 15px; }
         input { padding: 12px; width: 80%; border-radius: 8px; border: none; margin-bottom: 10px; }
         button { padding: 12px 25px; background: #ff0050; color: white; border: none; border-radius: 8px; cursor: pointer; }
-        video { max-width: 100%; height: auto; margin-top: 20px; border-radius: 10px; }
     </style>
 </head>
 <body>
@@ -24,17 +30,12 @@ HTML_TEMPLATE = """
         <div class="signature">by Avara Hasan</div>
         <form method="POST">
             <input type="text" name="url" placeholder="Link-i bura yapışdır..." required>
-            <br>
-            <button type="submit">Tap və Yüklə</button>
+            <br><button type="submit">Tap və Yüklə</button>
         </form>
         {% if result %}
             <div class="result">
                 <p>Video tapıldı!</p>
-                <a href="{{ result }}" download="video.mp4" target="_blank" style="background:#00e5ff; padding:10px 20px; display:inline-block; text-decoration:none; color:black; border-radius:8px; font-weight:bold;">Yükləməyə Başla</a>
-                <br>
-                <video controls>
-                    <source src="{{ result }}" type="video/mp4">
-                </video>
+                <a href="/download?url={{ result }}" style="background:#00e5ff; padding:12px; text-decoration:none; color:black; border-radius:8px; font-weight:bold;">Birbaşa Yüklə</a>
             </div>
         {% endif %}
     </div>
@@ -48,13 +49,9 @@ def index():
     if request.method == 'POST':
         url = request.form.get('url')
         try:
-            api_url = f"https://tikwm.com/api/?url={url}"
-            response = requests.get(api_url, timeout=10)
-            data = response.json()
-            if data.get('code') == 0:
-                result = data['data']['play']
-        except Exception:
-            pass
+            data = requests.get(f"https://tikwm.com/api/?url={url}").json()
+            if data.get('code') == 0: result = data['data']['play']
+        except: pass
     return render_template_string(HTML_TEMPLATE, result=result)
 
 if __name__ == '__main__':
