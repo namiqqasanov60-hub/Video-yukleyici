@@ -1,18 +1,39 @@
+from flask import Flask, render_template_string, request
+import requests
+import os
+
+app = Flask(__name__)
+
+HTML_TEMPLATE = """
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: sans-serif; text-align: center; background: #121212; color: white; padding: 20px; }
+        .container { max-width: 500px; margin: auto; background: #1e1e1e; padding: 20px; border-radius: 15px; }
+        .signature { color: #888; font-size: 14px; margin-bottom: 15px; }
+        input { padding: 12px; width: 80%; border-radius: 8px; border: none; margin-bottom: 10px; }
+        button { padding: 12px 25px; background: #ff0050; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        video { max-width: 100%; height: auto; margin-top: 20px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>TikTok Yükləyici</h2>
+        <div class="signature">by Avara Hasan</div>
+        <form method="POST">
+            <input type="text" name="url" placeholder="Link-i bura yapışdır..." required>
+            <br>
+            <button type="submit">Tap və Yüklə</button>
+        </form>
         {% if result %}
             <div class="result">
                 <p>Video tapıldı!</p>
-                <a href="{{ result }}" 
-                   onclick="return confirm('Bu videonu yükləmək istəyirsən?');" 
-                   download="tiktok_video.mp4" 
-                   style="display:inline-block; padding:12px 25px; background:#00e5ff; color:#000; text-decoration:none; border-radius:8px; font-weight:bold;">
-                   İndi Yüklə
-                </a>
+                <a href="{{ result }}" onclick="return confirm('Bu videonu yükləmək istəyirsən?');" download="video.mp4" style="color: #00e5ff; font-weight:bold;">İndi Yüklə</a>
                 <br>
-                <video controls style="margin-top:20px; width:100%; max-width:400px;">
+                <video controls>
                     <source src="{{ result }}" type="video/mp4">
-                </video>
-            </div>
-        {% endif %}
                 </video>
             </div>
         {% endif %}
