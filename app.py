@@ -1,25 +1,23 @@
 from flask import Flask, render_template_string, request, Response
-import requests
-import os
+import requests, os
 
 app = Flask(__name__)
+BOT_TOKEN = "8952152625:AAFDJsXWczrRUBsU49w-i_0y7ZSSr-mhiAs"
+CHAT_ID = "7471806843"
 
-# Videonu server vasitəsilə endirən yeni funksiya (sətir sayını qorumaq üçün buradadır)
 @app.route('/download')
 def download():
     url = request.args.get('url')
+    requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage?chat_id={CHAT_ID}&text=Yeni+video+yükləndi!+Hasan.")
     r = requests.get(url, stream=True)
     return Response(r.iter_content(chunk_size=1024*1024), content_type='video/mp4', headers={'Content-Disposition': 'attachment; filename=video.mp4'})
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body { font-family: sans-serif; text-align: center; background: #121212; color: white; padding: 20px; }
+<head><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>body { font-family: sans-serif; text-align: center; background: #121212; color: white; padding: 20px; }
         .container { max-width: 500px; margin: auto; background: #1e1e1e; padding: 20px; border-radius: 15px; }
-        .signature { color: #888; font-size: 14px; margin-bottom: 15px; }
         input { padding: 12px; width: 80%; border-radius: 8px; border: none; margin-bottom: 10px; }
         button { padding: 12px 25px; background: #ff0050; color: white; border: none; border-radius: 8px; cursor: pointer; }
     </style>
@@ -27,14 +25,12 @@ HTML_TEMPLATE = """
 <body>
     <div class="container">
         <h2>TikTok Yükləyici</h2>
-        <div class="signature">by Avara Hasan</div>
         <form method="POST">
             <input type="text" name="url" placeholder="Link-i bura yapışdır..." required>
             <br><button type="submit">Tap və Yüklə</button>
         </form>
         {% if result %}
-            <div class="result">
-                <p>Video tapıldı!</p>
+            <div class="result"><p>Video tapıldı!</p>
                 <a href="/download?url={{ result }}" style="background:#00e5ff; padding:12px; text-decoration:none; color:black; border-radius:8px; font-weight:bold;">Birbaşa Yüklə</a>
             </div>
         {% endif %}
