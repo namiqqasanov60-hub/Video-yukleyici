@@ -1,24 +1,31 @@
 from flask import Flask, render_template_string, request
 import requests
-import urllib3
-
-# SSL xəbərdarlıqlarını tamamilə söndürür
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    result = ""
     if request.method == 'POST':
         url = request.form.get('url')
-        api_url = f"https://api.tiklydown.eu.org/api/download?url={url}"
+        # Daha stabil API ünvanı
+        api_url = f"https://api.cobalt.tools/api/json"
+        headers = {"Accept": "application/json", "Content-Type": "application/json"}
+        payload = {"url": url}
+        
         try:
-            # Burda verify=False qoyuruq və bu dəfə işləməlidir
-            response = requests.get(api_url, verify=False, timeout=10)
-            return str(response.json())
+            response = requests.post(api_url, json=payload, headers=headers, timeout=10)
+            result = response.json()
         except Exception as e:
-            return f"Xəta: {e}"
-    return '''<form method="POST"><input name="url"><button>Yüklə</button></form>'''
+            result = f"Xəta: {e}"
+            
+    return render_template_string('''
+        <form method="POST">
+            <input type="text" name="url" placeholder="TikTok linkini bura yapışdır" required>
+            <button type="submit">Yüklə</button>
+        </form>
+        <pre>{{ result }}</pre>
+    ''', result=result)
 
 if __name__ == '__main__':
     app.run()
