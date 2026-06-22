@@ -30,7 +30,7 @@ HTML_TEMPLATE = """
         {% if result %}
             <div class="result">
                 <p>Video tapıldı!</p>
-                <a href="{{ result }}" onclick="return confirm('Bu videonu yükləmək istəyirsən?');" download="video.mp4" style="color: #00e5ff; font-weight:bold;">İndi Yüklə</a>
+                <a href="{{ result }}" download="video.mp4" style="background:#00e5ff; padding:10px; text-decoration:none; color:black; border-radius:5px; font-weight:bold;">Birbaşa Yüklə</a>
                 <br>
                 <video controls>
                     <source src="{{ result }}" type="video/mp4">
