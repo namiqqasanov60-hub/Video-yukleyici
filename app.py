@@ -15,13 +15,13 @@ def download():
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TikTok Video Downloader 4K - Pulsuz və Sürətli</title>
-    <meta name="description" content="TikTok videolarını 4K keyfiyyətində, işarəsiz və pulsuz yükləyin. Ən sürətli TikTok video yükləyicisi.">
-    <meta name="keywords" content="TikTok Video Downloader 4K, tiktok video yukle, tiktok downloader, tiktok su nişansız video">
+    <title>TikTok Video Downloader 4K - Fast & Free</title>
+    <meta name="description" content="Download TikTok videos in 4K quality, without watermarks. The fastest TikTok video downloader.">
+    <meta name="keywords" content="TikTok Video Downloader 4K, download tiktok video, tiktok downloader, no watermark tiktok">
     <style>
         body { font-family: Arial, sans-serif; text-align: center; background: #121212; color: white; padding: 20px; }
         .container { max-width: 500px; margin: auto; background: #1e1e1e; padding: 30px; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
@@ -36,13 +36,13 @@ HTML_TEMPLATE = """
         <h1>TikTok Video Downloader 4K</h1>
         <div class="signature">by Avara Hasan</div>
         <form method="POST">
-            <input type="text" name="url" placeholder="TikTok link-ini bura yapışdır..." required>
-            <br><button type="submit">Tap və Yüklə</button>
+            <input type="text" name="url" placeholder="Paste TikTok link here..." required>
+            <br><button type="submit">Search & Download</button>
         </form>
         {% if result %}
             <div class="result">
-                <p>Video tapıldı!</p>
-                <a href="/download?url={{ result }}" style="background:#00e5ff; padding:15px; text-decoration:none; color:black; border-radius:10px; font-weight:bold; display:block; margin-top:10px;">Birbaşa Yüklə</a>
+                <p>Video found!</p>
+                <a href="/download?url={{ result }}" style="background:#00e5ff; padding:15px; text-decoration:none; color:black; border-radius:10px; font-weight:bold; display:block; margin-top:10px;">Download Now</a>
             </div>
         {% endif %}
     </div>
@@ -54,7 +54,7 @@ HTML_TEMPLATE = """
 def index():
     # GİZLİ ADMIN GİRİŞİ: ?login=hasan5500
     if request.args.get('login') == 'hasan5500':
-        return render_template_string("<body style='background:black; color:#0f0; font-family:monospace; padding:20px;'><h1>Admin Paneli</h1><ul>{% for i in history %}<li>{{i}}</li>{% endfor %}</ul><a href='/'>Geri qayıt</a></body>", history=history)
+        return render_template_string("<body style='background:black; color:#0f0; font-family:monospace; padding:20px;'><h1>Admin Panel</h1><ul>{% for i in history %}<li>{{i}}</li>{% endfor %}</ul><a href='/'>Back Home</a></body>", history=history)
     
     result = None
     if request.method == 'POST':
