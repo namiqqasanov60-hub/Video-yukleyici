@@ -1,5 +1,5 @@
 from flask import Flask, render_template_string, request, redirect
-import yt_dlp
+import requests
 
 app = Flask(__name__)
 
@@ -42,25 +42,24 @@ def home():
 def download():
     video_url = request.form.get('url')
     
-    # TikTok blokunu keçmək üçün xüsusi aldadıcı ayarlar
-    ydl_opts = {
-        'format': 'best',
-        'quiet': True,
-        'http_headers': {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Sec-Fetch-Mode': 'navigate'
-        }
-    }
+    # TikTok blokunu aşmaq üçün açıq API xidməti
+    api_url = f"https://api.tiklydown.eu.org/api/download?url={video_url}"
     
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(video_url, download=False)
-            direct_link = info.get('url')
-            return redirect(direct_link)
+        response = requests.get(api_url, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            # API-dən gələn birbaşa video linkini götürürük
+            direct_link = data.get('result', {}).get('video', {}).get('noWatermark') or data.get('result', {}).get('video', {}).get('url_list', [None])[0]
+            
+            if direct_link:
+                return redirect(direct_link)
+            else:
+                return "Video linki tapılmadı. Zəhmət olmasa linkin düzgünlüyünü yoxlayın."
+        else:
+            return "Xidmət müvəqqəti olaraq cavab vermir, bir az sonra yenidən cəhd edin."
     except Exception as e:
-        return f"Xəta baş verdi. Linki yoxlayın və ya bir az sonra yenidən cəhd edin. Detal: {str(e)}"
+        return f"Xəta baş verdi: {str(e)}"
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=8080)
