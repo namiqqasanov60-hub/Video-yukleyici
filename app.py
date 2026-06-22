@@ -24,13 +24,17 @@ HTML_TEMPLATE = """
         <div class="signature">by Avara Hasan</div>
         <form method="POST">
             <input type="text" name="url" placeholder="Link-i bura yapışdır..." required>
-            <br><button type="submit">Tap və Yüklə</button>
+            <br>
+            <button type="submit">Tap və Yüklə</button>
         </form>
         {% if result %}
             <div class="result">
                 <p>Video tapıldı!</p>
-                <button onclick="fetch('{{ result }}').then(r=>r.blob()).then(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='video.mp4';a.click();})" style="background:#00e5ff; padding:10px; border:none; border-radius:5px; font-weight:bold;">Birbaşa Yüklə</button>
-                <br><video controls><source src="{{ result }}" type="video/mp4"></video>
+                <a href="{{ result }}" download="video.mp4" target="_blank" style="background:#00e5ff; padding:10px 20px; display:inline-block; text-decoration:none; color:black; border-radius:8px; font-weight:bold;">Yükləməyə Başla</a>
+                <br>
+                <video controls>
+                    <source src="{{ result }}" type="video/mp4">
+                </video>
             </div>
         {% endif %}
     </div>
