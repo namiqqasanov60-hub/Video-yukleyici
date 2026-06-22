@@ -4,7 +4,6 @@ import os
 
 app = Flask(__name__)
 
-# Yükləmə tarixçəsini yadda saxlamaq üçün siyahı
 history = []
 
 @app.route('/download')
@@ -19,6 +18,9 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Doğrulama Kodu -->
+    <meta name="google-site-verification" content="E3yGcFPsBBQddg8Lphv4Dgd2baI7YnaRYfC8O9m300A" />
+    
     <title>TikTok Video Downloader 4K - Fast & Free</title>
     <meta name="description" content="Download TikTok videos in 4K quality, without watermarks. The fastest TikTok video downloader.">
     <meta name="keywords" content="TikTok Video Downloader 4K, download tiktok video, tiktok downloader, no watermark tiktok">
@@ -52,7 +54,6 @@ HTML_TEMPLATE = """
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    # GİZLİ ADMIN GİRİŞİ: ?login=hasan5500
     if request.args.get('login') == 'hasan5500':
         return render_template_string("<body style='background:black; color:#0f0; font-family:monospace; padding:20px;'><h1>Admin Panel</h1><ul>{% for i in history %}<li>{{i}}</li>{% endfor %}</ul><a href='/'>Back Home</a></body>", history=history)
     
