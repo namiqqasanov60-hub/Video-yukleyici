@@ -1,11 +1,11 @@
 from flask import Flask, render_template_string, request, Response
 import requests
 import os
+from datetime import datetime
 
 app = Flask(__name__)
-
-# TikTok video yükləmə tarixi (son 10 link)
-history = []
+history = [] # Yüklənən videolar
+visits = []  # Sayta daxil olanlar (yalnız vaxt)
 
 @app.route('/download')
 def download():
@@ -20,26 +20,30 @@ HTML_TEMPLATE = """
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7X HD TikTok Video Downloader</title>
+    <title>7X HD Downloader</title>
     <style>
-        body { font-family: sans-serif; background: #121212; color: white; padding: 10px; margin: 0; }
-        .container { max-width: 400px; margin: auto; background: #1e1e1e; padding: 20px; border-radius: 15px; }
-        input { padding: 12px; width: 90%; border-radius: 8px; border: none; margin-bottom: 10px; }
-        button { padding: 12px; background: #ffcc00; border: none; border-radius: 8px; width: 100%; font-weight: bold; }
-        .result { margin-top: 20px; padding: 15px; background: #252525; border-radius: 10px; }
+        body { font-family: sans-serif; background: #001f3f; color: white; padding: 20px; text-align: center; margin: 0; }
+        .container { max-width: 400px; margin: auto; background: #003366; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .sunar { font-size: 12px; opacity: 0.7; margin-bottom: 10px; }
+        .pp { width: 100px; height: 100px; border-radius: 50%; border: 3px solid #00e5ff; margin-bottom: 15px; }
+        input { padding: 12px; width: 85%; border-radius: 10px; border: none; margin-bottom: 15px; text-align: center; }
+        button { padding: 12px 25px; background: #00e5ff; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: #001f3f; }
+        .result { margin-top: 20px; padding: 15px; background: #004080; border-radius: 10px; }
     </style>
 </head>
 <body>
     <div class="container">
+        <div class="sunar">qwsdayi77x sunar:)</div>
+        <img src="{{ url_for('static', filename='IMG-20260623-WA0027.jpg') }}" class="pp">
         <h1>7X HD Downloader</h1>
         <form method="POST">
             <input type="text" name="url" placeholder="TikTok linkini bura yapışdır..." required>
-            <button type="submit">Search & Download</button>
+            <br><button type="submit">Search & Download</button>
         </form>
         {% if result %}
             <div class="result">
                 <p>Video tapıldı!</p>
-                <a href="/download?url={{ result }}" style="color:#00e5ff; font-weight:bold;">Download Now</a>
+                <a href="/download?url={{ result }}" style="color:#ffffff; font-weight:bold; text-decoration:none;">Download Now</a>
             </div>
         {% endif %}
     </div>
@@ -49,17 +53,21 @@ HTML_TEMPLATE = """
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    # Admin Panel: Mobilə uyğun dizayn
+    # Ziyarətçi vaxtını qeydə al (IP-siz)
+    visits.insert(0, datetime.now().strftime('%H:%M:%S'))
+    if len(visits) > 50: visits.pop()
+
     if request.args.get('login') == 'hasan5500':
         admin_html = """
-        <body style='background:black; color:#0f0; padding:20px; font-family:sans-serif;'>
-            <h1>Son 10 Yüklənən Link</h1>
-            <ul style='word-break: break-all;'>
-                {% for i in history %}<li>{{ i }}</li>{% endfor %}
-            </ul>
-            <a href='/' style='color:white;'>Geri qayıt</a>
+        <body style='background:#001f3f; color:#fff; padding:20px; font-family:sans-serif;'>
+            <h1>Admin Panel</h1>
+            <h3>Son 100 Yükləmə</h3>
+            <ul style='font-size:12px;'>{% for i in history %}<li>{{ i }}</li>{% endfor %}</ul>
+            <h3>Son 50 Ziyarət (Vaxt)</h3>
+            <ul style='font-size:12px;'>{% for i in visits %}<li>{{ i }}</li>{% endfor %}</ul>
+            <a href='/' style='color:#00e5ff;'>Geri qayıt</a>
         </body>"""
-        return render_template_string(admin_html, history=history)
+        return render_template_string(admin_html, history=history, visits=visits)
     
     result = None
     if request.method == 'POST':
@@ -68,9 +76,8 @@ def index():
             data = requests.get(f"https://tikwm.com/api/?url={url}").json()
             if data.get('code') == 0: 
                 result = data['data']['play']
-                # Linki siyahıya əlavə et və 10-dan çoxdursa köhnəni sil
                 history.insert(0, url)
-                if len(history) > 10: history.pop()
+                if len(history) > 100: history.pop()
         except: pass
     return render_template_string(HTML_TEMPLATE, result=result)
 
