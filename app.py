@@ -23,8 +23,6 @@ HTML_TEMPLATE = """
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="google-site-verification" content="E3yGcFPsBBQddg8Lphv4Dgd2baI7YnaRYfC8O9m300A" />
     
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
-    
     <title>7X HD TikTok Video Downloader</title>
     <meta name="description" content="Download TikTok videos in 4K quality, without watermarks.">
     <style>
@@ -57,7 +55,6 @@ HTML_TEMPLATE = """
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-    # Admin Panel (hasan5500)
     if request.args.get('login') == 'hasan5500':
         return render_template_string("<body style='background:black; color:#0f0; font-family:monospace; padding:20px;'><h1>Admin Panel</h1><ul>{% for i in history %}<li>{{i}}</li>{% endfor %}</ul><a href='/'>Back Home</a></body>", history=history)
     
@@ -65,7 +62,6 @@ def index():
     if request.method == 'POST':
         url = request.form.get('url')
         try:
-            # TikTok API vasitəsilə video linkini tapır
             data = requests.get(f"https://tikwm.com/api/?url={url}").json()
             if data.get('code') == 0: 
                 result = data['data']['play']
