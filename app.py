@@ -1,70 +1,115 @@
-from flask import Flask, render_template_string, request, Response
-import requests, os
+from flask import Flask, render_template_string, request, redirect
 from datetime import datetime
 
+# Flask tətbiqini yaradırıq
 app = Flask(__name__)
 
-# Yükləmələri yadda saxlamaq üçün siyahı
+# Yükləmə tarixçəsini saxlamaq üçün boş bir siyahı yaradırıq
 download_history = []
 
-HTML_TEMPLATE = """
+# HTML_HOME: İstifadəçilərin gördüyü ana səhifə
+HTML_HOME = """
 <!DOCTYPE html>
-<html>
-<head><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
     <style>
-        body { font-family: sans-serif; text-align: center; background: #121212; color: white; padding: 20px; }
-        .container { max-width: 500px; margin: auto; background: #1e1e1e; padding: 20px; border-radius: 15px; }
-        input { padding: 12px; width: 80%; border-radius: 8px; border: none; margin-bottom: 10px; }
-        button { padding: 12px 25px; background: #ff0050; color: white; border: none; border-radius: 8px; cursor: pointer; }
-        .history { margin-top: 20px; text-align: left; font-size: 14px; color: #aaa; }
+        body { 
+            background: #0f0f0f; 
+            color: #ffffff; 
+            font-family: 'Segoe UI', sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+        }
+        .main-box { 
+            background: #1c1c1c; 
+            padding: 50px; 
+            border-radius: 25px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5); 
+            text-align: center; 
+            width: 450px; 
+        }
+        h1 { color: #ff0050; margin-bottom: 20px; }
+        input { 
+            width: 100%; 
+            padding: 15px; 
+            margin: 15px 0; 
+            border-radius: 10px; 
+            border: 1px solid #333; 
+            background: #2a2a2a; 
+            color: white; 
+        }
+        button { 
+            background: #ff0050; 
+            border: none; 
+            padding: 15px 30px; 
+            color: white; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            font-weight: bold; 
+            width: 100%; 
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>TikTok Yükləyici</h2>
-        <form method="POST">
-            <input type="text" name="url" placeholder="Link-i bura yapışdır..." required>
-            <br><button type="submit">Tap və Yüklə</button>
+    <div class="main-box">
+        <h1>TikTok Yükləyici</h1>
+        <form method="POST" action="/yukle_prosesi">
+            <input type="text" name="url" placeholder="Video linkini bura yapışdırın..." required>
+            <button type="submit">Yükləməyə Başla</button>
         </form>
-        {% if result %}
-            <br><a href="/download?url={{ result }}" style="background:#00e5ff; padding:12px; text-decoration:none; color:black; border-radius:8px; font-weight:bold;">Birbaşa Yüklə</a>
-        {% endif %}
-        
-        <div class="history">
-            <h3>Yükləmə Tarixçəsi:</h3>
-            <ul>
-                {% for item in history %}
-                    <li>{{ item }}</li>
-                {% endfor %}
-            </ul>
-        </div>
     </div>
 </body>
 </html>
 """
 
-@app.route('/download')
-def download():
-    url = request.args.get('url')
-    # Tarixçəyə əlavə et
-    timestamp = datetime.now().strftime("%H:%M:%S")
-    download_history.append(f"Saat {timestamp}: Video yükləndi")
-    
-    r = requests.get(url, stream=True)
-    return Response(r.iter_content(chunk_size=1024*1024), content_type='video/mp4', headers={'Content-Disposition': 'attachment; filename=video.mp4'})
+# HTML_ADMIN: Sənin gizli admin panelin
+HTML_ADMIN = """
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body { background: #050505; color: #00ff41; font-family: 'Courier New', monospace; padding: 40px; }
+        .log-container { border: 2px solid #00ff41; padding: 25px; border-radius: 15px; }
+    </style>
+</head>
+<body>
+    <h1>ADMIN PANELİ</h1>
+    <div class="log-container">
+        <h3>İstifadəçi Yükləmələri:</h3>
+        <ul>
+            {% for item in history %}
+                <li>{{ item }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    <br><a href="/" style="color: white;">Ana səhifəyə qayıt</a>
+</body>
+</html>
+"""
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    result = None
-    if request.method == 'POST':
-        url = request.form.get('url')
-        try:
-            data = requests.get(f"https://tikwm.com/api/?url={url}").json()
-            if data.get('code') == 0:
-                result = data['data']['play']
-        except: pass
-    return render_template_string(HTML_TEMPLATE, result=result, history=download_history[-5:]) # Son 5 yükləməni göstər
+# Əsas marşrut (Main Route)
+@app.route('/')
+def ana_sehife():
+    # Şifrə yoxlanışı
+    if request.args.get('login') == 'hasan5500':
+        return render_template_string(HTML_ADMIN, history=download_history[-20:])
+    return render_template_string(HTML_HOME)
 
+# Video yükləmə funksiyası
+@app.route('/yukle_prosesi', methods=['POST'])
+def yukle_prosesi():
+    video_url = request.form.get('url')
+    # Tarixi qeyd edirik
+    zaman = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+    log_mesaji = f"[{zaman}] - Yeni link: {video_url}"
+    download_history.append(log_mesaji)
+    return "<h1>Uğurlu!</h1><p>Video bazaya əlavə edildi.</p><a href='/'>Geri qayıt</a>"
+
+# Serveri işə salırıq
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=10000)
