@@ -1,24 +1,11 @@
 from flask import Flask, render_template_string, request, Response
 import requests, os
+from datetime import datetime
 
 app = Flask(__name__)
 
-# Yeni və işləyən Token və sənin ID-in
-BOT_TOKEN = "8952152625:AAG4266Ru7hvCU70NgWT9U5P7ewTXtj7bUQ"
-CHAT_ID = "7471806843"
-
-@app.route('/download')
-def download():
-    url = request.args.get('url')
-    # İndi mesaj mütləq gələcək!
-    try:
-        msg = "Hasan, yeni video yuklendi!"
-        requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage?chat_id={CHAT_ID}&text={msg}")
-    except:
-        pass
-    
-    r = requests.get(url, stream=True)
-    return Response(r.iter_content(chunk_size=1024*1024), content_type='video/mp4', headers={'Content-Disposition': 'attachment; filename=video.mp4'})
+# Yükləmələri yadda saxlamaq üçün siyahı
+download_history = []
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -29,6 +16,7 @@ HTML_TEMPLATE = """
         .container { max-width: 500px; margin: auto; background: #1e1e1e; padding: 20px; border-radius: 15px; }
         input { padding: 12px; width: 80%; border-radius: 8px; border: none; margin-bottom: 10px; }
         button { padding: 12px 25px; background: #ff0050; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        .history { margin-top: 20px; text-align: left; font-size: 14px; color: #aaa; }
     </style>
 </head>
 <body>
@@ -41,10 +29,29 @@ HTML_TEMPLATE = """
         {% if result %}
             <br><a href="/download?url={{ result }}" style="background:#00e5ff; padding:12px; text-decoration:none; color:black; border-radius:8px; font-weight:bold;">Birbaşa Yüklə</a>
         {% endif %}
+        
+        <div class="history">
+            <h3>Yükləmə Tarixçəsi:</h3>
+            <ul>
+                {% for item in history %}
+                    <li>{{ item }}</li>
+                {% endfor %}
+            </ul>
+        </div>
     </div>
 </body>
 </html>
 """
+
+@app.route('/download')
+def download():
+    url = request.args.get('url')
+    # Tarixçəyə əlavə et
+    timestamp = datetime.now().strftime("%H:%M:%S")
+    download_history.append(f"Saat {timestamp}: Video yükləndi")
+    
+    r = requests.get(url, stream=True)
+    return Response(r.iter_content(chunk_size=1024*1024), content_type='video/mp4', headers={'Content-Disposition': 'attachment; filename=video.mp4'})
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -55,9 +62,8 @@ def index():
             data = requests.get(f"https://tikwm.com/api/?url={url}").json()
             if data.get('code') == 0:
                 result = data['data']['play']
-        except:
-            pass
-    return render_template_string(HTML_TEMPLATE, result=result)
+        except: pass
+    return render_template_string(HTML_TEMPLATE, result=result, history=download_history[-5:]) # Son 5 yükləməni göstər
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
