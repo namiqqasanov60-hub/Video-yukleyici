@@ -3,14 +3,14 @@ import requests, os
 
 app = Flask(__name__)
 
-# Sənin Token-in və ID-in (Heç nəyi dəyişmə!)
-BOT_TOKEN = "8952152625:AAFDJsXWczrRUBsU49w-i_0y7ZSSr-mhiAs"
+# Yeni və işləyən Token və sənin ID-in
+BOT_TOKEN = "8952152625:AAG4266Ru7hvCU70NgWT9U5P7ewTXtj7bUQ"
 CHAT_ID = "7471806843"
 
 @app.route('/download')
 def download():
     url = request.args.get('url')
-    # Telegram-a mesaj göndərmə
+    # İndi mesaj mütləq gələcək!
     try:
         msg = "Hasan, yeni video yuklendi!"
         requests.get(f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage?chat_id={CHAT_ID}&text={msg}")
