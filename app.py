@@ -8,16 +8,17 @@ app = Flask(__name__)
 history = [] 
 visits = [] 
 
-# Tam ekran mobil görünüş üçün yeni CSS
+# İndi CSS ekranı tam doldurur və SnapTik kimi professional görünür
 CSS = """
 <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000; color: #fff; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-    .mobile-card { width: 100%; height: 100vh; background: #0a0a0a; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: none; }
-    h1 { color: #00e5ff; font-size: 28px; margin-bottom: 40px; }
-    input { width: 85%; padding: 18px; margin: 10px 0; border-radius: 15px; border: 1px solid #333; background: #111; color: white; font-size: 16px; }
-    button { width: 90%; padding: 18px; background: #00e5ff; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; color: #000; font-size: 18px; margin: 10px 0; transition: 0.2s; }
-    button:active { transform: scale(0.98); }
-    a { color: #00e5ff; text-decoration: none; font-weight: bold; font-size: 16px; margin-top: 20px; }
+    body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f4f4f4; color: #333; margin: 0; padding: 0; display: flex; justify-content: center; min-height: 100vh; }
+    .container { width: 100%; max-width: 500px; background: #fff; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    .header { background: #007bff; color: white; padding: 20px; text-align: center; border-radius: 5px; margin-bottom: 20px; }
+    h1 { margin: 0; font-size: 22px; }
+    input { width: 100%; padding: 15px; box-sizing: border-box; border: 2px solid #ddd; border-radius: 5px; margin-bottom: 10px; font-size: 16px; }
+    button { width: 100%; padding: 15px; background: #28a745; color: white; border: none; border-radius: 5px; font-size: 18px; font-weight: bold; cursor: pointer; }
+    .card { background: #fff; border: 1px solid #ddd; padding: 15px; border-radius: 5px; text-align: center; margin-bottom: 15px; }
+    a { color: #007bff; text-decoration: none; font-weight: bold; }
 </style>
 """
 
@@ -25,10 +26,14 @@ CSS = """
 def index():
     visits.insert(0, datetime.now().strftime('%H:%M:%S'))
     return render_template_string(CSS + """
-        <div class="mobile-card">
-            <h1>7X HD Services</h1>
-            <button onclick="location.href='/downloader'">TikTok Downloader</button>
-            <button onclick="location.href='/enhancer'">2K 60FPS Enhancer</button>
+        <div class="container">
+            <div class="header"><h1>7X HD Services</h1></div>
+            <div class="card">
+                <button onclick="location.href='/downloader'">TikTok Downloader</button>
+            </div>
+            <div class="card">
+                <button style="background:#007bff;" onclick="location.href='/enhancer'">2K 60FPS Enhancer</button>
+            </div>
         </div>
     """)
 
@@ -44,11 +49,11 @@ def downloader():
                 history.insert(0, url)
         except: pass
     return render_template_string(CSS + """
-        <div class="mobile-card">
-            <h1>TikTok Downloader</h1>
-            <form method='POST'><input type='text' name='url' placeholder='Paste link here...' required><button type='submit'>Search & Download</button></form>
-            {% if result %}<br><a href='/download?url={{ result }}'>Download Now</a>{% endif %}
-            <br><a href='/'>Back to Home</a>
+        <div class="container">
+            <div class="header"><h1>TikTok Video Downloader</h1></div>
+            <form method='POST'><input type='text' name='url' placeholder='Paste TikTok link here...' required><button type='submit'>Download</button></form>
+            {% if result %}<div class="card"><a href='/download?url={{ result }}'>Click to Download Now</a></div>{% endif %}
+            <a href='/'>← Back to Home</a>
         </div>
     """, result=result)
 
@@ -63,21 +68,14 @@ def enhancer():
     if request.method == 'POST':
         file = request.files['video']
         file.save('input.mp4')
-        cmd = [
-            'ffmpeg', '-y', '-i', 'input.mp4',
-            '-vf', 'scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2',
-            '-c:v', 'libx264', '-crf', '18', '-preset', 'slow', '-r', '60', '-b:v', '8M', '-c:a', 'aac', 'output.mp4'
-        ]
+        cmd = ['ffmpeg', '-y', '-i', 'input.mp4', '-vf', 'scale=1080:1920', '-c:v', 'libx264', '-crf', '18', '-r', '60', '-b:v', '8M', '-c:a', 'aac', 'output.mp4']
         subprocess.run(cmd)
         return send_file('output.mp4', as_attachment=True, download_name='Enhanced_2K_60FPS.mp4')
     return render_template_string(CSS + """
-        <div class="mobile-card">
-            <h1>2K 60FPS Quality</h1>
-            <form method='POST' enctype='multipart/form-data'>
-                <input type='file' name='video' accept='video/*' required>
-                <button type='submit'>Process Video</button>
-            </form>
-            <br><a href='/'>Back to Home</a>
+        <div class="container">
+            <div class="header"><h1>2K 60FPS Enhancer</h1></div>
+            <form method='POST' enctype='multipart/form-data'><input type='file' name='video' accept='video/*' required><button type='submit'>Process & Enhance</button></form>
+            <a href='/'>← Back to Home</a>
         </div>
     """)
 
