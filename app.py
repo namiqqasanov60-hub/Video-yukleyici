@@ -8,15 +8,16 @@ app = Flask(__name__)
 history = [] 
 visits = [] 
 
-# Mobil üçün mükəmməl CSS
+# Tam ekran mobil görünüş üçün yeni CSS
 CSS = """
 <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000; color: #fff; margin: 0; padding: 20px; display: flex; justify-content: center; }
-    .mobile-card { width: 100%; max-width: 400px; background: #111; padding: 20px; border-radius: 25px; text-align: center; border: 1px solid #333; }
-    h1 { color: #00e5ff; font-size: 24px; }
-    input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 12px; border: none; background: #222; color: white; }
-    button { width: 95%; padding: 15px; background: #00e5ff; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: #000; font-size: 16px; margin-top: 10px; }
-    a { color: #00e5ff; text-decoration: none; font-weight: bold; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000; color: #fff; margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .mobile-card { width: 100%; height: 100vh; background: #0a0a0a; padding: 20px; display: flex; flex-direction: column; justify-content: center; align-items: center; border: none; }
+    h1 { color: #00e5ff; font-size: 28px; margin-bottom: 40px; }
+    input { width: 85%; padding: 18px; margin: 10px 0; border-radius: 15px; border: 1px solid #333; background: #111; color: white; font-size: 16px; }
+    button { width: 90%; padding: 18px; background: #00e5ff; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; color: #000; font-size: 18px; margin: 10px 0; transition: 0.2s; }
+    button:active { transform: scale(0.98); }
+    a { color: #00e5ff; text-decoration: none; font-weight: bold; font-size: 16px; margin-top: 20px; }
 </style>
 """
 
@@ -47,7 +48,7 @@ def downloader():
             <h1>TikTok Downloader</h1>
             <form method='POST'><input type='text' name='url' placeholder='Paste link here...' required><button type='submit'>Search & Download</button></form>
             {% if result %}<br><a href='/download?url={{ result }}'>Download Now</a>{% endif %}
-            <br><br><a href='/'>Back to Home</a>
+            <br><a href='/'>Back to Home</a>
         </div>
     """, result=result)
 
@@ -79,8 +80,6 @@ def enhancer():
             <br><a href='/'>Back to Home</a>
         </div>
     """)
-
-# Admin panelini də bura əlavə edə bilərsən...
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
