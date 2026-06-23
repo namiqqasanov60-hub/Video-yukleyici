@@ -5,44 +5,32 @@ import subprocess
 from datetime import datetime
 
 app = Flask(__name__)
-history = []
-visits = []
+history = [] 
+visits = [] 
 
-# HTML: Ana Səhifə (Seçim ekranı)
-HOME_HTML = """
-<!DOCTYPE html>
-<html lang="az">
-<head>
-    <meta charset="UTF-8">
-    <title>7X HD Services</title>
-    <style>
-        body { font-family: sans-serif; background: #001f3f; color: white; text-align: center; padding: 50px; }
-        .card { background: #003366; padding: 30px; border-radius: 20px; display: inline-block; margin: 10px; width: 250px; }
-        button { padding: 15px 25px; background: #00e5ff; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: #001f3f; margin-top: 10px; }
-    </style>
-</head>
-<body>
-    <h1>7X HD Services</h1>
-    <div class="card">
-        <h3>📥 Downloader</h3>
-        <p>TikTok video yükləyici</p>
-        <button onclick="location.href='/downloader'">Başla</button>
-    </div>
-    <div class="card">
-        <h3>✨ Quality Enhancer</h3>
-        <p>1080p 60FPS çevirici</p>
-        <button onclick="location.href='/enhancer'">Başla</button>
-    </div>
-</body>
-</html>
+# Mobil üçün mükəmməl CSS
+CSS = """
+<style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #000; color: #fff; margin: 0; padding: 20px; display: flex; justify-content: center; }
+    .mobile-card { width: 100%; max-width: 400px; background: #111; padding: 20px; border-radius: 25px; text-align: center; border: 1px solid #333; }
+    h1 { color: #00e5ff; font-size: 24px; }
+    input { width: 90%; padding: 15px; margin: 10px 0; border-radius: 12px; border: none; background: #222; color: white; }
+    button { width: 95%; padding: 15px; background: #00e5ff; border: none; border-radius: 12px; font-weight: bold; cursor: pointer; color: #000; font-size: 16px; margin-top: 10px; }
+    a { color: #00e5ff; text-decoration: none; font-weight: bold; }
+</style>
 """
 
-# 1. Ana Səhifə (Seçim ekranı)
 @app.route('/')
 def index():
-    return render_template_string(HOME_HTML)
+    visits.insert(0, datetime.now().strftime('%H:%M:%S'))
+    return render_template_string(CSS + """
+        <div class="mobile-card">
+            <h1>7X HD Services</h1>
+            <button onclick="location.href='/downloader'">TikTok Downloader</button>
+            <button onclick="location.href='/enhancer'">2K 60FPS Enhancer</button>
+        </div>
+    """)
 
-# 2. Downloader Səhifəsi (Sənin köhnə kodun)
 @app.route('/downloader', methods=['GET', 'POST'])
 def downloader():
     result = None
@@ -52,16 +40,16 @@ def downloader():
             data = requests.get(f"https://tikwm.com/api/?url={url}").json()
             if data.get('code') == 0: 
                 result = data['data']['play']
+                history.insert(0, url)
         except: pass
-    
-    # Sənin əvvəlki HTML-ini bura qoydum
-    return render_template_string("""
-        <body style='background:#001f3f; color:white; text-align:center; padding:20px;'>
-            <h1>Video Downloader</h1>
-            <form method='POST'><input type='text' name='url' required><button type='submit'>Yüklə</button></form>
-            {% if result %}<a href='/download?url={{ result }}'>Video Faylı (Yüklə)</a>{% endif %}
-            <br><br><a href='/'>Geri</a>
-        </body>""", result=result)
+    return render_template_string(CSS + """
+        <div class="mobile-card">
+            <h1>TikTok Downloader</h1>
+            <form method='POST'><input type='text' name='url' placeholder='Paste link here...' required><button type='submit'>Search & Download</button></form>
+            {% if result %}<br><a href='/download?url={{ result }}'>Download Now</a>{% endif %}
+            <br><br><a href='/'>Back to Home</a>
+        </div>
+    """, result=result)
 
 @app.route('/download')
 def download():
@@ -69,25 +57,30 @@ def download():
     r = requests.get(url, stream=True)
     return Response(r.iter_content(chunk_size=1024*1024), content_type='video/mp4', headers={'Content-Disposition': 'attachment; filename=video.mp4'})
 
-# 3. Quality Enhancer Səhifəsi (Yeni)
 @app.route('/enhancer', methods=['GET', 'POST'])
 def enhancer():
     if request.method == 'POST':
         file = request.files['video']
         file.save('input.mp4')
-        # FFmpeg ilə keyfiyyəti 1080p 60FPS-ə çevir
-        subprocess.run(['ffmpeg', '-i', 'input.mp4', '-vf', 'scale=1080:1920', '-r', '60', '-b:v', '8M', 'output.mp4'])
-        return send_file('output.mp4', as_attachment=True)
-    
-    return render_template_string("""
-        <body style='background:#001f3f; color:white; text-align:center; padding:20px;'>
-            <h1>Video Quality Enhancer</h1>
+        cmd = [
+            'ffmpeg', '-y', '-i', 'input.mp4',
+            '-vf', 'scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2',
+            '-c:v', 'libx264', '-crf', '18', '-preset', 'slow', '-r', '60', '-b:v', '8M', '-c:a', 'aac', 'output.mp4'
+        ]
+        subprocess.run(cmd)
+        return send_file('output.mp4', as_attachment=True, download_name='Enhanced_2K_60FPS.mp4')
+    return render_template_string(CSS + """
+        <div class="mobile-card">
+            <h1>2K 60FPS Quality</h1>
             <form method='POST' enctype='multipart/form-data'>
-                <input type='file' name='video' required><br><br>
-                <button type='submit'>Yüklə və Keyfiyyəti Artır</button>
+                <input type='file' name='video' accept='video/*' required>
+                <button type='submit'>Process Video</button>
             </form>
-            <br><a href='/'>Geri</a>
-        </body>""")
+            <br><a href='/'>Back to Home</a>
+        </div>
+    """)
+
+# Admin panelini də bura əlavə edə bilərsən...
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
