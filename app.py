@@ -2,13 +2,11 @@ from flask import Flask, render_template_string, request, Response, send_file
 import requests
 import os
 import subprocess
+import uuid
 from datetime import datetime
 
 app = Flask(__name__)
-history = [] 
-visits = [] 
 
-# Sənin orijinal dizaynın (heç nəyi dəyişmədim, sadəcə menyu əlavə etdim)
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -21,7 +19,7 @@ HTML_TEMPLATE = """
         .container { max-width: 400px; margin: auto; background: #003366; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
         .pp { width: 100px; height: 100px; border-radius: 50%; border: 3px solid #00e5ff; margin-bottom: 15px; }
         input { padding: 12px; width: 85%; border-radius: 10px; border: none; margin-bottom: 15px; text-align: center; }
-        button { padding: 12px 25px; background: #00e5ff; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: #001f3f; margin: 5px; }
+        button { padding: 12px 25px; background: #00e5ff; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: #001f3f; margin: 5px; width: 85%; }
         .result { margin-top: 20px; padding: 15px; background: #004080; border-radius: 10px; }
     </style>
 </head>
@@ -34,16 +32,17 @@ HTML_TEMPLATE = """
             <button onclick="location.href='/enhancer'">2K 60FPS Enhancer</button>
         {% elif page == 'downloader' %}
             <form method="POST">
-                <input type="text" name="url" placeholder="Paste TikTok link here..." required>
-                <br><button type="submit">Search & Download</button>
+                <input type="text" name="url" placeholder="Paste link here..." required>
+                <br><button type="submit">Download</button>
             </form>
-            {% if result %}<div class="result"><a href="/download?url={{ result }}" style="color:white; font-weight:bold;">Download Now</a></div>{% endif %}
+            {% if result %}<div class="result"><a href="/download?url={{ result }}" style="color:white; font-weight:bold;">Download</a></div>{% endif %}
             <br><a href="/" style="color:#00e5ff;">Back to Home</a>
         {% elif page == 'enhancer' %}
             <form method="POST" enctype="multipart/form-data">
                 <input type="file" name="video" accept="video/*" required>
                 <br><button type="submit">Process Video</button>
             </form>
+            <p style="font-size:12px; opacity:0.7;">Note: Processing may take 30s.</p>
             <br><a href="/" style="color:#00e5ff;">Back to Home</a>
         {% endif %}
     </div>
@@ -52,8 +51,7 @@ HTML_TEMPLATE = """
 """
 
 @app.route('/')
-def index():
-    return render_template_string(HTML_TEMPLATE, page='home')
+def index(): return render_template_string(HTML_TEMPLATE, page='home')
 
 @app.route('/downloader', methods=['GET', 'POST'])
 def downloader():
@@ -70,10 +68,17 @@ def downloader():
 def enhancer():
     if request.method == 'POST':
         file = request.files['video']
-        file.save('input.mp4')
-        cmd = ['ffmpeg', '-y', '-i', 'input.mp4', '-vf', 'scale=1080:1920', '-c:v', 'libx264', '-crf', '18', '-r', '60', '-b:v', '8M', 'output.mp4']
-        subprocess.run(cmd)
-        return send_file('output.mp4', as_attachment=True, download_name='Enhanced_2K_60FPS.mp4')
+        filename = f"{uuid.uuid4()}.mp4"
+        out_filename = f"out_{filename}"
+        file.save(filename)
+        
+        # Timeout 40 saniyə qoyuldu ki, 502 verməsin
+        cmd = ['ffmpeg', '-y', '-i', filename, '-vf', 'scale=1080:1920', '-c:v', 'libx264', '-crf', '20', '-r', '60', '-b:v', '4M', out_filename]
+        try:
+            subprocess.run(cmd, timeout=40)
+            return send_file(out_filename, as_attachment=True, download_name='Enhanced_2K_60FPS.mp4')
+        except:
+            return "Error: Processing timed out. Try a smaller video."
     return render_template_string(HTML_TEMPLATE, page='enhancer')
 
 @app.route('/download')
