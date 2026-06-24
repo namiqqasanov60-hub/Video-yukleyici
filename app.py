@@ -1,14 +1,15 @@
 from flask import Flask, render_template_string, request, Response
 import requests
+import os
 from datetime import datetime
 
 app = Flask(__name__)
 
-# Məlumatları yadda saxlamaq üçün (server restart olunanda bunlar silinəcək)
+# Məlumatları yadda saxlamaq üçün
 history = [] 
 visits = [] 
 
-# CSS və HTML bir yerdə: Mobil üçün optimallaşdırılmış "App" görünüşü
+# CSS və HTML: Mobil üçün optimallaşdırılmış "App" görünüşü
 HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html lang="en">
@@ -60,8 +61,10 @@ def index():
             <h2>Admin Panel</h2>
             <h3>History (Last 50)</h3>
             <ul>{% for i in history %}<li>{{ i }}</li>{% endfor %}</ul>
-            <a href='/'>Back to Home</a>
-        </body>""", history=history)
+            <h3>Visits (Last 50)</h3>
+            <ul>{% for i in visits %}<li>{{ i }}</li>{% endfor %}</ul>
+            <a href='/' style='color:#00e5ff;'>Back to Home</a>
+        </body>""", history=history, visits=visits)
 
     result = None
     if request.method == 'POST':
