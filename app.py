@@ -1,25 +1,20 @@
 from flask import Flask, render_template_string, request, Response
 import requests
-from datetime import datetime
+import os
 
 app = Flask(__name__)
-history = []
-visits = []
 
-# Dizaynı qoruyuruq, sadəcə menyu və ingiliscə dilini əlavə edirik
 HTML_TEMPLATE = """
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>7X HD Services</title>
     <style>
-        body { font-family: sans-serif; background: #001f3f; color: white; padding: 20px; text-align: center; margin: 0; }
-        .container { max-width: 400px; margin: auto; background: #003366; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .pp { width: 100px; height: 100px; border-radius: 50%; border: 3px solid #00e5ff; margin-bottom: 15px; }
-        input { padding: 12px; width: 85%; border-radius: 10px; border: none; margin-bottom: 15px; text-align: center; }
-        button { padding: 12px 25px; background: #00e5ff; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: #001f3f; margin: 5px; width: 85%; }
+        body { font-family: sans-serif; background: #001f3f; color: white; text-align: center; padding: 20px; }
+        .container { max-width: 400px; margin: auto; background: #003366; padding: 25px; border-radius: 20px; }
+        .pp { width: 100px; height: 100px; border-radius: 50%; border: 3px solid #00e5ff; }
+        input { padding: 12px; width: 85%; margin-bottom: 10px; border-radius: 10px; border: none; text-align: center; }
+        button { padding: 12px 25px; background: #00e5ff; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; color: #001f3f; }
         .result { margin-top: 20px; padding: 15px; background: #004080; border-radius: 10px; }
     </style>
 </head>
@@ -27,50 +22,43 @@ HTML_TEMPLATE = """
     <div class="container">
         <img src="https://i.imgur.com/Q6XzY6n.png" class="pp">
         <h1>7X HD Services</h1>
-        {% if page == 'home' %}
-            <button onclick="location.href='/downloader'">TikTok Downloader</button><br>
-            <button onclick="location.href='/enhancer'">2K 60FPS Enhancer</button>
-        {% elif page == 'downloader' %}
-            <form method="POST">
-                <input type="text" name="url" placeholder="Paste TikTok link here..." required>
-                <br><button type="submit">Search & Download</button>
-            </form>
-            {% if result %}<div class="result"><a href="/download?url={{ result }}" style="color:white; font-weight:bold;">Download Now</a></div>{% endif %}
-            <br><a href="/" style="color:#00e5ff;">Back to Home</a>
-        {% elif page == 'enhancer' %}
-            <p>Enhancement service is currently under maintenance to keep the server stable.</p>
-            <br><a href="/" style="color:#00e5ff;">Back to Home</a>
+        <form method="POST">
+            <input type="text" name="url" placeholder="TikTok link..." required>
+            <br><button type="submit">Download</button>
+        </form>
+        {% if result %}
+            <div class="result">
+                <a href="/download?url={{ result }}" style="color:#ffffff; font-weight:bold; text-decoration:none;">Click to Download</a>
+            </div>
         {% endif %}
     </div>
 </body>
 </html>
 """
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    return render_template_string(HTML_TEMPLATE, page='home')
-
-@app.route('/downloader', methods=['GET', 'POST'])
-def downloader():
     result = None
     if request.method == 'POST':
         url = request.form.get('url')
         try:
+            # API sorğusu
             data = requests.get(f"https://tikwm.com/api/?url={url}").json()
-            if data.get('code') == 0: result = data['data']['play']
-        except: pass
-    return render_template_string(HTML_TEMPLATE, page='downloader', result=result)
-
-@app.route('/enhancer')
-def enhancer():
-    return render_template_string(HTML_TEMPLATE, page='enhancer')
+            if data.get('code') == 0: 
+                result = data['data']['play']
+        except: 
+            pass
+    return render_template_string(HTML_TEMPLATE, result=result)
 
 @app.route('/download')
 def download():
     url = request.args.get('url')
-    if not url: return "URL not found", 400
-    r = requests.get(url, stream=True)
-    return Response(r.iter_content(chunk_size=1024*1024), content_type='video/mp4', headers={'Content-Disposition': 'attachment; filename=video.mp4'})
+    if not url: return "URL tapılmadı", 400
+    try:
+        r = requests.get(url, stream=True)
+        return Response(r.iter_content(chunk_size=1024*1024), content_type='video/mp4', headers={'Content-Disposition': 'attachment; filename=video.mp4'})
+    except:
+        return "Yükləmə xətası", 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
